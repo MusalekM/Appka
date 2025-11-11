@@ -710,7 +710,7 @@ export default function App() {
             {((area === "other" && discOther.trim() && focusOther.trim()) ||
               (area !== "other" && ((discipline === "other" && discOther.trim()) || (discipline && (focus === "other" ? focusOther.trim() : focus))))) && (
               <>
-                <label className="block text-sm font-medium mt-4 mb-1">Charakter činnosti</label>
+                <label className="block text sm font-medium mt-4 mb-1">Charakter činnosti</label>
                 <select
                   className="w-full border rounded p-2"
                   value={character}
@@ -799,9 +799,11 @@ export default function App() {
               try {
                 const response = await fetch(WEB_APP_URL, {
                   method: "POST",
-                  mode: "no-cors",
+                  // Keep it a "simple request" so there's no CORS preflight.
                   headers: { "Content-Type": "application/x-www-form-urlencoded" },
                   body: "data=" + encodeURIComponent(JSON.stringify(payload)),
+                  // You may omit mode entirely; if you keep it, "no-cors" is fine but response will be opaque.
+                  // mode: "no-cors",
                 });
 
                 console.log("Fetch dokončen", response);
