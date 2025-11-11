@@ -4,9 +4,9 @@ import { useMemo, useState } from "react";
    TĚLESNÝ ZÁPIS — KOMPLETNÍ PROTOTYP
    ======================================================================== */
 
-/** === Your Apps Script Web App URL (from Deploy → Web app → /exec) === */
+/** === Your Apps Script Web App URL (Deploy → Web app → /exec) === */
 const WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbyEzVX9OtoEWUofm62JjVDWFL5ZLCK1dOAZm9Em_8HAbK-HaE8tqEcgRsav1AkWSIU_/exec";
+  "https://script.google.com/macros/s/AKfycbwDVNuyi_jebH9a18QdzLsxz7ieqbKI4-iSsPE7nMSGCu-CsnJQPxaBaX1VO0JKadU3/exec";
 
 /* ===================== ZÁKLADNÍ DATOVÉ TYPY A POMOCNÉ LABELY ===================== */
 
@@ -381,7 +381,7 @@ export default function App() {
     if (discipline === "other") return [];
     switch (area) {
       case "sportovni_hry":
-        return GAME_CONTENT[discipline as Game] ?? [];
+        return GAME_CONTENT[discipline as any] ?? [];
       case "atletika":
         return ATHLETICS_CONTENT[discipline as any] ?? [];
       case "gymnastika":
