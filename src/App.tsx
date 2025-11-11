@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 
 /** === Your Apps Script Web App URL (Deploy → Web app → /exec) === */
 const WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbw5h8n6F5XnhIeaLhPKEECqISi-2ZynOmJAagPlA2ehbCvo1KoNcDg2dXSD210e-T4_/exec";
+  "https://script.google.com/macros/s/AKfycbxR2yrJ30j6wUYg1uCL0Pd524U-yNj29rBe6G-8WqRfh_Hi5gJq9unfcgkhfj4kMU1r/exec";
 
 /* ===================== ZÁKLADNÍ DATOVÉ TYPY A POMOCNÉ LABELY ===================== */
 
