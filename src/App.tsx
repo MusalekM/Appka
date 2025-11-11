@@ -799,11 +799,8 @@ export default function App() {
               try {
                 const response = await fetch(WEB_APP_URL, {
                   method: "POST",
-                  // Keep it a "simple request" so there's no CORS preflight.
                   headers: { "Content-Type": "application/x-www-form-urlencoded" },
                   body: "data=" + encodeURIComponent(JSON.stringify(payload)),
-                  // You may omit mode entirely; if you keep it, "no-cors" is fine but response will be opaque.
-                  // mode: "no-cors",
                 });
 
                 console.log("Fetch dokončen", response);
