@@ -1,16 +1,12 @@
 import { useMemo, useState } from "react";
 
 /* ========================================================================
-   TĚLESNÝ ZÁPIS — KOMPLETNÍ PROTOTYP
-   Fixes in this version:
-   - Correct validation for every “Jiná / other” branch so the submit button enables
-   - Minor className typo cleanup
-   - Uses URLSearchParams for the POST body (same semantics, often more reliable)
+   TĚLESNÝ ZÁPIS — PROTOTYP (with fixed Apps Script POST)
    ======================================================================== */
 
-/** === Your Apps Script Web App URL (Deploy → Web app → /exec) === */
-const WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbxR2yrJ30j6wUYg1uCL0Pd524U-yNj29rBe6G-8WqRfh_Hi5gJq9unfcgkhfj4kMU1r/exec";
+/** === CONFIG: your Apps Script Web App URL === */
+const APPS_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbxkGwelTvzfJNaojdrPmkm_PhzaqhoBi3rzKxyKfM5moDp_2jgu7K31rq7RSOCbUEjv/exec";
 
 /* ===================== ZÁKLADNÍ DATOVÉ TYPY A POMOCNÉ LABELY ===================== */
 
@@ -47,7 +43,7 @@ const SCHOOL_TYPE_LABEL: Record<"tandem5" | "tandem2" | "notandem", string> = {
   notandem: "Bez tandemu",
 };
 
-// 6 charakterů činnosti
+// 6 charakterů činnosti (dle české terminologie)
 const CHARACTERS = [
   { value: "nacvik",            label: "Nácvik" },
   { value: "prupravna_hra",     label: "Průpravná hra" },
@@ -58,7 +54,7 @@ const CHARACTERS = [
 ];
 const CHARACTER_LABEL = Object.fromEntries(CHARACTERS.map(c => [c.value, c.label])) as Record<string,string>;
 
-// Zahřátí
+// Zahřátí (tvé varianty)
 const WARMUPS = [
   "řízené zahřátí hra",
   "řízené zahřátí rozcvičení bez pomůcek",
@@ -71,7 +67,6 @@ const WARMUPS = [
 
 /* ===================== HLAVNÍ ČÁST — OBLASTI, DISCIPLÍNY, ZAMĚŘENÍ ===================== */
 
-// --- SPORTOVNÍ HRY ---
 const GAMES = [
   "vybijena","hazena","basketbal","volejbal","fotbal","prehazovana","florbal","frisbee","kinball","tchoukball","netball",
   "ringtenis","nohejbal","rugby_tag","pálkované_hry","korfbal"
@@ -204,17 +199,11 @@ const GAME_CONTENT: Record<Game, { value: string; label: string }[]> = {
   ],
 };
 
-// --- ATLETIKA ---
 const ATHLETICS = ["beh","skoky","hody","koordinace"] as const;
 type Athletics = typeof ATHLETICS[number];
-
 const ATHLETICS_LABEL: Record<Athletics,string> = {
-  beh: "Běhy",
-  skoky: "Skoky",
-  hody: "Hody a vrhy",
-  koordinace: "Koordinace",
+  beh: "Běhy", skoky: "Skoky", hody: "Hody a vrhy", koordinace: "Koordinace",
 };
-
 const ATHLETICS_CONTENT: Record<Athletics, { value: string; label: string }[]> = {
   beh: [
     { value: "beh_obecne", label: "Běh (obecně)" },
@@ -243,10 +232,8 @@ const ATHLETICS_CONTENT: Record<Athletics, { value: string; label: string }[]> =
   ],
 };
 
-// --- GYMNASTIKA ---
 const GYM = ["zakladni_gym","akrobacie","rovnovaha","lezeni_splh","posilovani_kompenzace"] as const;
 type Gym = typeof GYM[number];
-
 const GYM_LABEL: Record<Gym,string> = {
   zakladni_gym: "Základní gymnastika",
   akrobacie: "Akrobacie",
@@ -254,7 +241,6 @@ const GYM_LABEL: Record<Gym,string> = {
   lezeni_splh: "Lezení / šplh",
   posilovani_kompenzace: "Posilování a kompenzace",
 };
-
 const GYM_CONTENT: Record<Gym, { value: string; label: string }[]> = {
   zakladni_gym: [
     { value: "kotoul_vpred_vzad", label: "Kotoul vpřed/vzad" },
@@ -281,10 +267,8 @@ const GYM_CONTENT: Record<Gym, { value: string; label: string }[]> = {
   ],
 };
 
-// --- ÚPOLY ---
 const UPOLY = ["bezpecne_pady","uchopy_chvaty","pretahy_pretlaky","obranna_postaveni","kooperace_sila"] as const;
 type Upoly = typeof UPOLY[number];
-
 const UPOLY_LABEL: Record<Upoly,string> = {
   bezpecne_pady: "Bezpečné pády",
   uchopy_chvaty: "Úchopy a chvaty",
@@ -292,7 +276,6 @@ const UPOLY_LABEL: Record<Upoly,string> = {
   obranna_postaveni: "Obranné postavení",
   kooperace_sila: "Kooperační hry na sílu",
 };
-
 const UPOLY_CONTENT: Record<Upoly, { value: string; label: string }[]> = {
   bezpecne_pady: [
     { value: "pad_vpred", label: "Pád vpřed" },
@@ -327,8 +310,6 @@ export default function App() {
   const [classId,    setClassId]      = useState("");
   const [place,      setPlace]        = useState<"tělocvična"|"hřiště"|"venku"|"jiné"|"">("");
   const [placeOther, setPlaceOther]   = useState("");
-
-  /* --- Úvodní část --- */
   const [warmup, setWarmup] = useState("");
 
   /* --- Hlavní část --- */
@@ -387,11 +368,11 @@ export default function App() {
       case "sportovni_hry":
         return GAME_CONTENT[discipline as Game] ?? [];
       case "atletika":
-        return ATHLETICS_CONTENT[discipline as keyof typeof ATHLETICS_CONTENT] ?? [];
+        return ATHLETICS_CONTENT[discipline as Athletics] ?? [];
       case "gymnastika":
-        return GYM_CONTENT[discipline as keyof typeof GYM_CONTENT] ?? [];
+        return GYM_CONTENT[discipline as Gym] ?? [];
       case "upoly":
-        return UPOLY_CONTENT[discipline as keyof typeof UPOLY_CONTENT] ?? [];
+        return UPOLY_CONTENT[discipline as Upoly] ?? [];
       default:
         return [];
     }
@@ -445,9 +426,9 @@ export default function App() {
     if (d === "other") return dOther || "(jiná disciplína – prázdná)";
     switch (a) {
       case "sportovni_hry": return GAME_LABEL[d as Game] ?? d;
-      case "atletika":      return ATHLETICS_LABEL[d as keyof typeof ATHLETICS_LABEL] ?? d;
-      case "gymnastika":    return GYM_LABEL[d as keyof typeof GYM_LABEL] ?? d;
-      case "upoly":         return UPOLY_LABEL[d as keyof typeof UPOLY_LABEL] ?? d;
+      case "atletika":      return ATHLETICS_LABEL[d as Athletics] ?? d;
+      case "gymnastika":    return GYM_LABEL[d as Gym] ?? d;
+      case "upoly":         return UPOLY_LABEL[d as Upoly] ?? d;
       default: return d;
     }
   };
@@ -457,54 +438,29 @@ export default function App() {
     if (f === "other") return fOther || "(jiná činnost – prázdná)";
     const list =
       a === "sportovni_hry" ? GAME_CONTENT[d as Game] :
-      a === "atletika"      ? ATHLETICS_CONTENT[d as keyof typeof ATHLETICS_CONTENT] :
-      a === "gymnastika"    ? GYM_CONTENT[d as keyof typeof GYM_CONTENT] :
-      a === "upoly"         ? UPOLY_CONTENT[d as keyof typeof UPOLY_CONTENT] : [];
+      a === "atletika"      ? ATHLETICS_CONTENT[d as Athletics] :
+      a === "gymnastika"    ? GYM_CONTENT[d as Gym] :
+      a === "upoly"         ? UPOLY_CONTENT[d as Upoly] : [];
     return list.find(x => x.value === f)?.label ?? f;
   };
 
-  /* --- Validace odeslání (opraveno pro „Jiná…“) --- */
+  /* --- Validace odeslání --- */
+  const isMainFilled =
+    (area && (area !== "other" ? !!discipline : !!areaOther.trim())) &&
+    (discipline !== "other" ? !!focus : true) &&
+    ((discipline === "other") || (focus !== "other" ? true : !!focusOther.trim()));
 
-  // 1) povinné základy pro „Identifikace“
-  const baseOk =
+  const canSubmit =
     !!schoolType &&
     !!schoolId &&
     !!teacher &&
     !!classId &&
     !!place &&
     (place !== "jiné" ? true : !!placeOther.trim()) &&
-    !!warmup;
-
-  // 2) povinné pro „Hlavní část“ s ohledem na „Jiná…“
-  const mainOk = (() => {
-    if (!area) return false;
-
-    // a) OBLAST = „Jiná“
-    if (area === "other") {
-      return !!areaOther.trim() && !!discOther.trim() && !!focusOther.trim();
-    }
-
-    // b) OBLAST z nabídky → požaduj disciplínu
-    if (!discipline) return false;
-
-    // b1) Disciplína = „Jiná“ → text disciplíny + text zaměření
-    if (discipline === "other") {
-      return !!discOther.trim() && !!focusOther.trim();
-    }
-
-    // b2) Disciplína z nabídky → požaduj zaměření; pokud „Jiná“, tak text
-    if (!focus) return false;
-    return focus === "other" ? !!focusOther.trim() : true;
-  })();
-
-  // 3) role vedoucího
-  const leaderOk = schoolType === "notandem" ? true : !!leader;
-
-  // 4) charakter je povinný
-  const characterOk = !!character;
-
-  // 5) finální podmínka buttonu
-  const canSubmit = baseOk && mainOk && characterOk && leaderOk;
+    !!warmup &&
+    isMainFilled &&
+    !!character &&
+    (!!leader || isLeaderLockedToTeacher);
 
   /* ===================== UI ===================== */
 
@@ -663,6 +619,7 @@ export default function App() {
                    "Disciplína / hra"}
                 </label>
 
+                {/* Pokud je zvolena jiná oblast, rovnou „jinou disciplínu“ (pole) */}
                 {area === "other" ? (
                   <input
                     className="w-full border rounded p-2"
@@ -803,6 +760,8 @@ export default function App() {
             <p><span className="font-medium">Charakter:</span> {character ? CHARACTER_LABEL[character] : "—"}</p>
             <p><span className="font-medium">Vedl:</span> {leader || (isLeaderLockedToTeacher ? "ucitel" : "—")}</p>
           </div>
+
+          {/* ====== SUBMIT BUTTON (fixed fetch) ====== */}
           <button
             className="mt-4 w-full md:w-auto px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300"
             disabled={!canSubmit}
@@ -825,25 +784,47 @@ export default function App() {
               };
 
               try {
-                // form-urlencoded via URLSearchParams (lets browser set headers)
-                const params = new URLSearchParams();
-                params.set("data", JSON.stringify(payload));
+                // IMPORTANT: send as application/x-www-form-urlencoded with "data=<json>"
+                const body = "data=" + encodeURIComponent(JSON.stringify(payload));
 
-                await fetch(WEB_APP_URL, {
+                await fetch(APPS_SCRIPT_URL, {
                   method: "POST",
-                  mode: "no-cors",
-                  body: params,
+                  mode: "no-cors", // opaque is fine; Apps Script will still receive the body
+                  headers: {
+                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                  },
+                  body,
                 });
 
                 alert("✅ Záznam byl odeslán do Google Sheets!");
               } catch (error) {
-                console.error("Chyba při fetch:", error);
+                console.error("Chyba při odesílání:", error);
                 alert("❌ Nepodařilo se odeslat data. Zkontrolujte připojení nebo Google Script.");
               }
             }}
           >
             Odeslat záznam do Google Sheets
           </button>
+
+          {/* Optional diagnostic buttons */}
+          <div className="mt-3 flex gap-2 text-xs">
+            <a
+              className="underline text-blue-600"
+              href={`${APPS_SCRIPT_URL}?ping=1`}
+              target="_blank" rel="noreferrer"
+              title="Zapíše testovací řádek do Data"
+            >
+              Test: ping
+            </a>
+            <a
+              className="underline text-blue-600"
+              href={`${APPS_SCRIPT_URL}?whoami=1`}
+              target="_blank" rel="noreferrer"
+              title="Ukáže, do jakého souboru se bude zapisovat"
+            >
+              Test: whoami
+            </a>
+          </div>
         </aside>
       </main>
     </div>
