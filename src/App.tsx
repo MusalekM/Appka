@@ -1,14 +1,11 @@
 import { useMemo, useState } from "react";
 
 /* ========================================================================
-   TĚLESNÝ ZÁPIS — PROTOTYP (with fixed Apps Script POST)
+   TĚLESNÝ ZÁPIS — PROTOTYP
    ======================================================================== */
 
-/** === CONFIG: your Apps Script Web App URL === */
 const APPS_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbxkGwelTvzfJNaojdrPmkm_PhzaqhoBi3rzKxyKfM5moDp_2jgu7K31rq7RSOCbUEjv/exec";
-
-/* ===================== ZÁKLADNÍ DATOVÉ TYPY A POMOCNÉ LABELY ===================== */
 
 type SchoolId = "LA" | "HE" | "MO" | "LO" | "ZE" | "RU" | "LY" | "PL" | "VEP";
 
@@ -19,48 +16,40 @@ type School = {
 };
 
 const ALL_SCHOOLS: School[] = [
-  { id: "LA", name: "ZŠ Laštůvkova", teachers: ["LAPeštálová", "LAŠebková", "LABuršíková", "LAKašpárková"] },
-  { id: "HE", name: "ZŠ Heyrovského", teachers: ["HEKročilová", "HEStudená"] },
-  { id: "MO", name: "ZŠ Mohelnice", teachers: ["MOZeman"] },
-  { id: "LO", name: "ZŠ Lomnice", teachers: ["LOHyánková"] },
-  { id: "ZE", name: "ZŠ Žernosecká", teachers: ["ZETvrdá"] },
-  { id: "RU", name: "ZŠ Rudná", teachers: ["RUučitelA", "RUučitelB"] },
-  { id: "LY", name: "ZŠ Lyčkovo náměstí", teachers: ["LYučitelA", "LYučitelB"] },
-  { id: "PL", name: "ZŠ Plzeň", teachers: ["PLučitelA", "PLučitelB"] },
-  { id: "VEP", name: "ZŠ Velké Popovice", teachers: ["VEPučitel"] },
+  { id: "LA",  name: "ZŠ Laštůvkova",          teachers: ["LAPeštálová","LAŠebková","LABuršíková","LAKašpárková"] },
+  { id: "HE",  name: "ZŠ Heyrovského",         teachers: ["HEKročilová","HEStudená"] },
+  { id: "MO",  name: "ZŠ Mohelnice",           teachers: ["MOZeman"] },
+  { id: "LO",  name: "ZŠ Lomnice",             teachers: ["LOHyánková"] },
+  { id: "ZE",  name: "ZŠ Žernosecká",          teachers: ["ZETvrdá"] },
+  { id: "RU",  name: "ZŠ Rudná",               teachers: ["RUučitelA","RUučitelB"] },
+  { id: "LY",  name: "ZŠ Lyčkovo náměstí",     teachers: ["LYučitelA","LYučitelB"] },
+  { id: "PL",  name: "ZŠ Plzeň",               teachers: ["PLučitelA","PLučitelB"] },
+  { id: "VEP", name: "ZŠ Velké Popovice",      teachers: ["VEPučitel"] },
 ];
 
 const SCHOOLS_BY_TYPE: Record<"" | "tandem5" | "tandem2" | "notandem", SchoolId[]> = {
   "": [],
-  tandem5: ["LA", "HE"],
-  tandem2: ["MO", "LO", "ZE"],
-  notandem: ["RU", "LY", "PL", "VEP"],
+  tandem5: ["LA","HE"],
+  tandem2: ["MO","LO","ZE"],
+  notandem: ["RU","LY","PL","VEP"],
 };
 
 /* --- Hlavní část: výčty pro oblasti / disciplíny / obsahy --- */
 
-// SPORTOVNÍ HRY
 const GAMES = [
-  "fotbal",
-  "basketbal",
-  "florbal",
-  "vybijena",
-  "hazena",
-  "volejbal",
-  "hokejbal",
-  "korfbal",
+  "fotbal","basketbal","florbal","vybijena","hazena","volejbal","hokejbal","korfbal",
 ] as const;
 type Game = typeof GAMES[number];
 
-const GAME_LABEL: Record<Game, string> = {
-  fotbal: "Fotbal",
-  basketbal: "Basketbal",
-  florbal: "Florbal",
+const GAME_LABEL: Record<Game,string> = {
+  fotbal:   "Fotbal",
+  basketbal:"Basketbal",
+  florbal:  "Florbal",
   vybijena: "Vybíjená",
-  hazena: "Házená",
+  hazena:   "Házená",
   volejbal: "Volejbal",
   hokejbal: "Hokejbal",
-  korfbal: "Korfbal",
+  korfbal:  "Korfbal",
 };
 
 const GAME_CONTENT: Record<Game, { value: string; label: string }[]> = {
@@ -117,14 +106,10 @@ const GAME_CONTENT: Record<Game, { value: string; label: string }[]> = {
   ],
 };
 
-// ATLETIKA
-const ATHLETICS = ["beh", "skoky", "hody", "koordinace"] as const;
+const ATHLETICS = ["beh","skoky","hody","koordinace"] as const;
 type Athletics = typeof ATHLETICS[number];
-const ATHLETICS_LABEL: Record<Athletics, string> = {
-  beh: "Běhy",
-  skoky: "Skoky",
-  hody: "Hody a vrhy",
-  koordinace: "Koordinace",
+const ATHLETICS_LABEL: Record<Athletics,string> = {
+  beh: "Běhy", skoky: "Skoky", hody: "Hody a vrhy", koordinace: "Koordinace",
 };
 const ATHLETICS_CONTENT: Record<Athletics, { value: string; label: string }[]> = {
   beh: [
@@ -135,51 +120,49 @@ const ATHLETICS_CONTENT: Record<Athletics, { value: string; label: string }[]> =
     { value: "intervaly", label: "Intervalový běh" },
   ],
   skoky: [
-    { value: "skok_daleky", label: "Skok do dálky" },
-    { value: "skok_z_mista", label: "Skok do dálky z místa" },
-    { value: "viceskoky", label: "Víceskoky" },
-    { value: "prekazky", label: "Překážkový běh / překonávání překážek" },
+    { value: "skok_daleky",   label: "Skok do dálky" },
+    { value: "skok_z_mista",  label: "Skok do dálky z místa" },
+    { value: "viceskoky",     label: "Víceskoky" },
+    { value: "prekazky",      label: "Překážkový běh / překonávání překážek" },
   ],
   hody: [
-    { value: "hod_mickem", label: "Hod míčkem" },
-    { value: "hod_plackou", label: "Házení plackou / medicinbalem" },
-    { value: "vrh", label: "Vrh (základy bezpečného provedení)" },
+    { value: "hod_mickem",       label: "Hod míčkem" },
+    { value: "hod_plackou",      label: "Házení plackou / medicinbalem" },
+    { value: "vrh",              label: "Vrh (základy bezpečného provedení)" },
   ],
   koordinace: [
-    { value: "behaci_abeceda", label: "Běžecká abeceda" },
+    { value: "behaci_abeceda",   label: "Běžecká abeceda" },
     { value: "rychlost_obratnost", label: "Rychlost a obratnost" },
-    { value: "koord_hry", label: "Koordinační hry" },
+    { value: "koord_hry",          label: "Koordinační hry" },
   ],
 };
 
-// GYMNASTIKA
-const GYM = ["kotouly", "rovnovaha", "visy_stojky"] as const;
+const GYM = ["kotouly","rovnovaha","visy_stojky"] as const;
 type Gym = typeof GYM[number];
-const GYM_LABEL: Record<Gym, string> = {
-  kotouly: "Kotouly a přemety (základy)",
-  rovnovaha: "Rovnováha a překážkové dráhy",
-  visy_stojky: "Visy, podpory, stojky (základy)",
+const GYM_LABEL: Record<Gym,string> = {
+  kotouly:    "Kotouly a přemety (základy)",
+  rovnovaha:  "Rovnováha a překážkové dráhy",
+  visy_stojky:"Visy, podpory, stojky (základy)",
 };
 const GYM_CONTENT: Record<Gym, { value: string; label: string }[]> = {
   kotouly: [
     { value: "kotoul_vpred", label: "Kotoul vpřed" },
-    { value: "kotoul_vzad", label: "Kotoul vzad (základy)" },
+    { value: "kotoul_vzad",  label: "Kotoul vzad (základy)" },
   ],
   rovnovaha: [
     { value: "chuze_kladina", label: "Chůze po kladině / lavičce" },
     { value: "stoj_na_jedne", label: "Stoj na jedné / balanční cvičení" },
   ],
   visy_stojky: [
-    { value: "visy", label: "Visy na hrazdě" },
-    { value: "podpory", label: "Podpory na nářadí / lavičce" },
+    { value: "visy",      label: "Visy na hrazdě" },
+    { value: "podpory",   label: "Podpory na nářadí / lavičce" },
     { value: "stojka_zaklady", label: "Stojka u stěny (základy)" },
   ],
 };
 
-// ÚPOLY
-const UPOLY = ["uchopy_hry", "paky", "obranna_postaveni", "kooperace_sila"] as const;
+const UPOLY = ["uchopy_hry","paky", "obranna_postaveni","kooperace_sila"] as const;
 type Upoly = typeof UPOLY[number];
-const UPOLY_LABEL: Record<Upoly, string> = {
+const UPOLY_LABEL: Record<Upoly,string> = {
   uchopy_hry: "Úpolové hry s úchopy",
   paky: "Základní páky a vyprošťování (bezpečné formy)",
   obranna_postaveni: "Obranná postavení a postoje",
@@ -190,53 +173,63 @@ const UPOLY_CONTENT: Record<Upoly, { value: string; label: string }[]> = {
     { value: "tahani", label: "Tahání a přetahování" },
     { value: "pretlacovani", label: "Přetlačování" },
   ],
-  paky: [{ value: "zakladni_paky", label: "Jednoduché páky (bezpečně, s kontrolou)" }],
+  paky: [
+    { value: "zakladni_paky", label: "Jednoduché páky (bezpečně, s kontrolou)" },
+  ],
   obranna_postaveni: [
     { value: "obranna_pozice", label: "Obranné postavení" },
-    { value: "prace_nohou", label: "Práce nohou / odstupy" },
+    { value: "prace_nohou",    label: "Práce nohou / odstupy" },
   ],
   kooperace_sila: [
     { value: "kooperacni_hry_sila", label: "Kooperační hry na sílu" },
-    { value: "tahy_tlaky", label: "Tahy a tlaky – bezpečně" },
+    { value: "tahy_tlaky",          label: "Tahy a tlaky – bezpečně" },
   ],
 };
 
-/* ===================== HLAVNÍ KOMPONENTA ===================== */
+const CHARACTERS = [
+  { value: "rozvoj",    label: "Rozvoj dovednosti" },
+  { value: "upevneni",  label: "Upevnění / nácvik" },
+  { value: "aplikace",  label: "Aplikace ve hře" },
+  { value: "soutez",    label: "Hra / soutěžní forma" },
+];
+
+const WARMUPS = [
+  { value: "volna_hra", label: "Volná hra" },
+  { value: "behaci",    label: "Běhací / honičky" },
+  { value: "prota",     label: "Protažení" },
+  { value: "jine",      label: "Neřízené zahřátí / jiné" },
+];
 
 export default function App() {
   const [date] = useState(() => new Date().toISOString());
 
-  /* --- Identifikace školy / učitele --- */
   const [schoolType, setSchoolType] = useState<"" | "tandem5" | "tandem2" | "notandem">("");
-  const [schoolId, setSchoolId] = useState<"" | SchoolId>("");
-  const [teacher, setTeacher] = useState("");
-  const [classId, setClassId] = useState("");
-  const [place, setPlace] = useState<"tělocvična" | "hřiště" | "venku" | "jiné" | "">("");
+  const [schoolId,   setSchoolId]   = useState<"" | SchoolId>("");
+  const [teacher,    setTeacher]    = useState("");
+  const [classId,    setClassId]    = useState("");
+  const [place,      setPlace]      = useState<"tělocvična"|"hřiště"|"venku"|"jiné"|"">("");
   const [placeOther, setPlaceOther] = useState("");
-  const [warmup, setWarmup] = useState("");
+  const [warmup,     setWarmup]     = useState("");
 
-  /* --- Hlavní část --- */
-  const AREAS = ["sportovni_hry", "atletika", "gymnastika", "upoly"] as const;
+  const AREAS = ["sportovni_hry","atletika","gymnastika","upoly"] as const;
   type Area = typeof AREAS[number];
-  const AREA_LABEL: Record<Area, string> = {
+  const AREA_LABEL: Record<Area,string> = {
     sportovni_hry: "Sportovní hry",
-    atletika: "Atletika",
-    gymnastika: "Gymnastika",
-    upoly: "Úpoly",
+    atletika:      "Atletika",
+    gymnastika:    "Gymnastika",
+    upoly:         "Úpoly",
   };
 
-  const [area, setArea] = useState<"" | Area | "other">("");
-  const [areaOther, setAreaOther] = useState("");
+  const [area,       setArea]       = useState<"" | Area | "other">("");
+  const [areaOther,  setAreaOther]  = useState("");
   const [discipline, setDiscipline] = useState("");
-  const [discOther, setDiscOther] = useState("");
-  const [focus, setFocus] = useState("");
+  const [discOther,  setDiscOther]  = useState("");
+  const [focus,      setFocus]      = useState("");
   const [focusOther, setFocusOther] = useState("");
-  const [character, setCharacter] = useState("");
+  const [character,  setCharacter]  = useState("");
 
-  /* --- Vedoucí hodiny --- */
   const [leader, setLeader] = useState<"" | "ucitel" | "tandem" | "trener" | "zak">("");
 
-  /* --- Odvozené seznamy --- */
   const filteredSchools = useMemo(() => {
     if (!schoolType) return [];
     const allowed = SCHOOLS_BY_TYPE[schoolType];
@@ -250,42 +243,29 @@ export default function App() {
 
   const isLeaderLockedToTeacher = schoolType === "notandem";
 
-  /* --- Odvozené (Hlavní část) — seznam disciplín dle zvolené oblasti --- */
   const disciplineOptions = useMemo(() => {
     if (area === "other" || !area) return [];
     switch (area) {
-      case "sportovni_hry":
-        return GAMES.map((g) => ({ value: g, label: GAME_LABEL[g] }));
-      case "atletika":
-        return ATHLETICS.map((a) => ({ value: a, label: ATHLETICS_LABEL[a] }));
-      case "gymnastika":
-        return GYM.map((g) => ({ value: g, label: GYM_LABEL[g] }));
-      case "upoly":
-        return UPOLY.map((u) => ({ value: u, label: UPOLY_LABEL[u] }));
-      default:
-        return [];
+      case "sportovni_hry": return GAMES.map(g => ({ value: g, label: GAME_LABEL[g] }));
+      case "atletika":      return ATHLETICS.map(a => ({ value: a, label: ATHLETICS_LABEL[a] }));
+      case "gymnastika":    return GYM.map(g => ({ value: g, label: GYM_LABEL[g] }));
+      case "upoly":         return UPOLY.map(u => ({ value: u, label: UPOLY_LABEL[u] }));
+      default:              return [];
     }
   }, [area]);
 
-  /* --- Odvozené (Hlavní část) — seznam zaměření dle disciplíny --- */
   const focusOptions = useMemo(() => {
     if (!discipline || area === "other") return [];
     if (discipline === "other") return [];
     switch (area) {
-      case "sportovni_hry":
-        return GAME_CONTENT[discipline as Game] ?? [];
-      case "atletika":
-        return ATHLETICS_CONTENT[discipline as Athletics] ?? [];
-      case "gymnastika":
-        return GYM_CONTENT[discipline as Gym] ?? [];
-      case "upoly":
-        return UPOLY_CONTENT[discipline as Upoly] ?? [];
-      default:
-        return [];
+      case "sportovni_hry": return GAME_CONTENT[discipline as Game] ?? [];
+      case "atletika":      return ATHLETICS_CONTENT[discipline as Athletics] ?? [];
+      case "gymnastika":    return GYM_CONTENT[discipline as Gym] ?? [];
+      case "upoly":         return UPOLY_CONTENT[discipline as Upoly] ?? [];
+      default:              return [];
     }
   }, [area, discipline]);
 
-  /* --- Reset závislostí při změnách --- */
   const onChangeSchoolType = (val: "" | "tandem5" | "tandem2" | "notandem") => {
     setSchoolType(val);
     setSchoolId("");
@@ -317,9 +297,7 @@ export default function App() {
     setCharacter("");
   };
 
-  /* --- Utility pro labely do náhledu --- */
-  const schoolLabel = (id: string) =>
-    ALL_SCHOOLS.find((s) => s.id === id)?.name ?? "";
+  const schoolLabel = (id: string) => ALL_SCHOOLS.find(s => s.id === id)?.name ?? "";
 
   const SCHOOL_TYPE_LABEL: Record<"" | "tandem5" | "tandem2" | "notandem", string> = {
     "": "",
@@ -338,16 +316,11 @@ export default function App() {
     if (!a || !d) return "";
     if (d === "other") return dOther || "(jiná disciplína – prázdná)";
     switch (a) {
-      case "sportovni_hry":
-        return GAME_LABEL[d as Game] ?? d;
-      case "atletika":
-        return ATHLETICS_LABEL[d as Athletics] ?? d;
-      case "gymnastika":
-        return GYM_LABEL[d as Gym] ?? d;
-      case "upoly":
-        return UPOLY_LABEL[d as Upoly] ?? d;
-      default:
-        return d;
+      case "sportovni_hry": return GAME_LABEL[d as Game] ?? d;
+      case "atletika":      return ATHLETICS_LABEL[d as Athletics] ?? d;
+      case "gymnastika":    return GYM_LABEL[d as Gym] ?? d;
+      case "upoly":         return UPOLY_LABEL[d as Upoly] ?? d;
+      default: return d;
     }
   };
 
@@ -362,48 +335,35 @@ export default function App() {
       return fOther || "(jiná činnost – prázdná)";
     }
     const list =
-      a === "sportovni_hry"
-        ? GAME_CONTENT[d as Game]
-        : a === "atletika"
-        ? ATHLETICS_CONTENT[d as Athletics]
-        : a === "gymnastika"
-        ? GYM_CONTENT[d as Gym]
-        : a === "upoly"
-        ? UPOLY_CONTENT[d as Upoly]
-        : [];
-    return list?.find((x) => x.value === f)?.label ?? f;
+      a === "sportovni_hry" ? GAME_CONTENT[d as Game] :
+      a === "atletika"      ? ATHLETICS_CONTENT[d as Athletics] :
+      a === "gymnastika"    ? GYM_CONTENT[d as Gym] :
+      a === "upoly"         ? UPOLY_CONTENT[d as Upoly] : [];
+    return list?.find(x => x.value === f)?.label ?? f;
   };
 
-  const CHARACTER_LABEL: Record<string, string> = {
-    rozvoj: "Rozvoj dovednosti",
+  const CHARACTER_LABEL: Record<string,string> = {
+    rozvoj:   "Rozvoj dovednosti",
     upevneni: "Upevnění / nácvik",
     aplikace: "Aplikace ve hře",
-    soutez: "Hra / soutěžní forma",
+    soutez:   "Hra / soutěžní forma",
   };
 
-  /* --- VALIDACE HLAVNÍ ČÁSTI (OPRAVENÁ) --- */
   const isMainFilled = (() => {
-    // Není vybraná oblast → nedovolíme odeslat
     if (!area) return false;
 
-    // Oblast = "jiná oblast (other)" → používáme textová pole
-    // musí být vyplněno: areaOther, discOther, focusOther
     if (area === "other") {
       return !!areaOther.trim() && !!discOther.trim() && !!focusOther.trim();
     }
 
-    // Standardní oblast, ale není disciplína
     if (!discipline) return false;
 
-    // Disciplína = "other" → musí být dopsaná disciplína i zaměření
     if (discipline === "other") {
       return !!discOther.trim() && !!focusOther.trim();
     }
 
-    // Standardní disciplína: musí být vybraný "focus"
     if (!focus) return false;
 
-    // Pokud je focus = "other", musí být vyplněn focusOther
     if (focus === "other") return !!focusOther.trim();
 
     return true;
@@ -421,38 +381,28 @@ export default function App() {
     !!character &&
     (!!leader || isLeaderLockedToTeacher);
 
-  /* ===================== UI ===================== */
-
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-10 bg-white border-b">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="text-xl md:text-2xl font-bold">Tělesný zápis</h1>
-          <span className="text-xs text-gray-500">
-            prototyp • {new Date(date).toLocaleString?.("cs-CZ") || date}
-          </span>
+          <span className="text-xs text-gray-500">prototyp • {new Date(date).toLocaleString?.("cs-CZ") || date}</span>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* ========== Levý sloupec – FORMULÁŘ ========== */}
+        {/* FORMULÁŘ */}
         <section className="bg-white rounded-lg shadow border p-4 space-y-6">
-          {/* Identifikace */}
+          {/* Identifikace hodiny */}
           <div>
             <h2 className="text-lg font-semibold mb-3">Identifikace hodiny</h2>
-
             <div className="grid md:grid-cols-2 gap-3">
-              {/* Typ školy */}
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Typ školy / režim TV
-                </label>
+                <label className="block text-sm font-medium mb-1">Typ školy / režim TV</label>
                 <select
                   className="w-full border rounded p-2"
                   value={schoolType}
-                  onChange={(e) =>
-                    onChangeSchoolType(e.target.value as any)
-                  }
+                  onChange={(e) => onChangeSchoolType(e.target.value as any)}
                 >
                   <option value="">Vyberte</option>
                   <option value="tandem5">Tandem 5× týdně</option>
@@ -460,63 +410,36 @@ export default function App() {
                   <option value="notandem">Bez tandemu</option>
                 </select>
               </div>
-
-              {/* Škola */}
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Škola
-                </label>
+                <label className="block text-sm font-medium mb-1">Škola</label>
                 <select
                   className="w-full border rounded p-2"
                   value={schoolId}
-                  onChange={(e) => {
-                    setSchoolId(e.target.value as SchoolId);
-                    setTeacher("");
-                  }}
+                  onChange={(e) => { setSchoolId(e.target.value as SchoolId); setTeacher(""); }}
                   disabled={!schoolType}
                 >
-                  <option value="">
-                    {schoolType
-                      ? "Vyberte školu"
-                      : "Nejprve zvolte typ školy"}
-                  </option>
+                  <option value="">{schoolType ? "Vyberte školu" : "Nejprve zvolte typ školy"}</option>
                   {filteredSchools.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.id} — {s.name}
-                    </option>
+                    <option key={s.id} value={s.id}>{s.id} — {s.name}</option>
                   ))}
                 </select>
               </div>
-
-              {/* Učitel */}
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Učitel
-                </label>
+                <label className="block text-sm font-medium mb-1">Učitel</label>
                 <select
                   className="w-full border rounded p-2"
                   value={teacher}
                   onChange={(e) => setTeacher(e.target.value)}
                   disabled={!schoolId}
                 >
-                  <option value="">
-                    {schoolId
-                      ? "Vyberte učitele"
-                      : "Nejprve vyberte školu"}
-                  </option>
+                  <option value="">{schoolId ? "Vyberte učitele" : "Nejprve vyberte školu"}</option>
                   {teacherOptions.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
+                    <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
               </div>
-
-              {/* Třída */}
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Třída
-                </label>
+                <label className="block text-sm font-medium mb-1">Třída</label>
                 <select
                   className="w-full border rounded p-2"
                   value={classId}
@@ -533,12 +456,9 @@ export default function App() {
               </div>
             </div>
 
-            {/* Místo a úvod */}
             <div className="grid md:grid-cols-2 gap-3 mt-3">
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Místo
-                </label>
+                <label className="block text-sm font-medium mb-1">Místo</label>
                 <select
                   className="w-full border rounded p-2"
                   value={place}
@@ -551,12 +471,9 @@ export default function App() {
                   <option value="jiné">Jiné</option>
                 </select>
               </div>
-
               {place === "jiné" && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Popis místa (jiné)
-                  </label>
+                  <label className="block text-sm font-medium mb-1">Popis místa (jiné)</label>
                   <input
                     className="w-full border rounded p-2"
                     value={placeOther}
@@ -567,23 +484,15 @@ export default function App() {
               )}
             </div>
 
-            {/* Úvod / zahřátí */}
             <div className="mt-3">
-              <label className="block text-sm font-medium mb-1">
-                Úvodní část – zahřátí
-              </label>
+              <label className="block text-sm font-medium mb-1">Úvodní část – zahřátí</label>
               <select
                 className="w-full border rounded p-2"
                 value={warmup}
                 onChange={(e) => setWarmup(e.target.value)}
               >
                 <option value="">Vyberte</option>
-                <option value="volna_hra">Volná hra</option>
-                <option value="behaci">Běhací / honičky</option>
-                <option value="prota">Protažení</option>
-                <option value="jine">
-                  Neřízené zahřátí / jiné
-                </option>
+                {WARMUPS.map(w => <option key={w.value} value={w.value}>{w.label}</option>)}
               </select>
             </div>
           </div>
@@ -594,15 +503,11 @@ export default function App() {
 
             {/* Oblast */}
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Oblast / sport
-              </label>
+              <label className="block text-sm font-medium mb-1">Oblast / sport</label>
               <select
                 className="w-full border rounded p-2"
                 value={area}
-                onChange={(e) =>
-                  onChangeArea(e.target.value as any)
-                }
+                onChange={(e) => onChangeArea(e.target.value as any)}
               >
                 <option value="">Vyberte oblast</option>
                 <option value="sportovni_hry">Sportovní hry</option>
@@ -615,7 +520,7 @@ export default function App() {
               {area === "other" && (
                 <input
                   className="mt-2 w-full border rounded p-2"
-                  placeholder="Zadejte oblast / sport… (např. plavání, bruslení…)"
+                  placeholder="Zadejte oblast / sport…"
                   value={areaOther}
                   onChange={(e) => setAreaOther(e.target.value)}
                 />
@@ -649,29 +554,20 @@ export default function App() {
                     <select
                       className="w-full border rounded p-2"
                       value={discipline}
-                      onChange={(e) =>
-                        onChangeDiscipline(e.target.value)
-                      }
+                      onChange={(e) => onChangeDiscipline(e.target.value)}
                     >
                       <option value="">Vyberte</option>
-                      {disciplineOptions.map((d) => (
-                        <option key={d.value} value={d.value}>
-                          {d.label}
-                        </option>
+                      {disciplineOptions.map(d => (
+                        <option key={d.value} value={d.value}>{d.label}</option>
                       ))}
-                      <option value="other">
-                        Jiná disciplína (doplňte ručně)
-                      </option>
+                      <option value="other">Jiná disciplína (doplňte ručně)</option>
                     </select>
-
                     {discipline === "other" && (
                       <input
                         className="mt-2 w-full border rounded p-2"
                         placeholder="Zadejte jinou disciplínu / hru…"
                         value={discOther}
-                        onChange={(e) =>
-                          setDiscOther(e.target.value)
-                        }
+                        onChange={(e) => setDiscOther(e.target.value)}
                       />
                     )}
                   </>
@@ -679,100 +575,57 @@ export default function App() {
               </>
             )}
 
-            {/* Co se dělo (zaměření) */}
-            {area &&
-              ((area === "other" && discOther.trim()) ||
-                (area !== "other" && discipline)) && (
-                <>
-                  <label className="block text-sm font-medium mt-4 mb-1">
-                    Co se dělo (zaměření)
-                  </label>
-
-                  {area === "other" || discipline === "other" ? (
-                    <input
+            {/* Co se dělo */}
+            {area && ((area === "other" && discOther.trim()) || (area !== "other" && discipline)) && (
+              <>
+                <label className="block text-sm font-medium mt-4 mb-1">Co se dělo (zaměření)</label>
+                {area === "other" || discipline === "other" ? (
+                  <input
+                    className="w-full border rounded p-2"
+                    placeholder="Popište činnost / zaměření…"
+                    value={focusOther}
+                    onChange={(e) => setFocusOther(e.target.value)}
+                  />
+                ) : (
+                  <>
+                    <select
                       className="w-full border rounded p-2"
-                      placeholder="Popište činnost / zaměření…"
-                      value={focusOther}
-                      onChange={(e) =>
-                        setFocusOther(e.target.value)
-                      }
-                    />
-                  ) : (
-                    <>
-                      <select
-                        className="w-full border rounded p-2"
-                        value={focus}
-                        onChange={(e) =>
-                          onChangeFocus(e.target.value)
-                        }
-                      >
-                        <option value="">
-                          Vyberte zaměření
-                        </option>
-                        {focusOptions.map((f) => (
-                          <option
-                            key={f.value}
-                            value={f.value}
-                          >
-                            {f.label}
-                          </option>
-                        ))}
-                        <option value="other">
-                          Jiná (doplňte ručně)
-                        </option>
-                      </select>
-
-                      {focus === "other" && (
-                        <input
-                          className="mt-2 w-full border rounded p-2"
-                          placeholder="Doplňte zaměření / činnost…"
-                          value={focusOther}
-                          onChange={(e) =>
-                            setFocusOther(e.target.value)
-                          }
-                        />
-                      )}
-                    </>
-                  )}
-                </>
-              )}
+                      value={focus}
+                      onChange={(e) => onChangeFocus(e.target.value)}
+                    >
+                      <option value="">Vyberte zaměření</option>
+                      {focusOptions.map(f => (
+                        <option key={f.value} value={f.value}>{f.label}</option>
+                      ))}
+                      <option value="other">Jiná (doplňte ručně)</option>
+                    </select>
+                    {focus === "other" && (
+                      <input
+                        className="mt-2 w-full border rounded p-2"
+                        placeholder="Doplňte zaměření / činnost…"
+                        value={focusOther}
+                        onChange={(e) => setFocusOther(e.target.value)}
+                      />
+                    )}
+                  </>
+                )}
+              </>
+            )}
 
             {/* Charakter činnosti */}
-            {((area === "other" &&
-              discOther.trim() &&
-              focusOther.trim()) ||
+            {((area === "other" && discOther.trim() && focusOther.trim()) ||
               (area !== "other" &&
-                ((discipline === "other" &&
-                  discOther.trim() &&
-                  focusOther.trim()) ||
-                  (discipline &&
-                    (focus === "other"
-                      ? focusOther.trim()
-                      : focus))))) && (
+                ((discipline === "other" && discOther.trim() && focusOther.trim()) ||
+                 (discipline && (focus === "other" ? focusOther.trim() : focus))))) && (
               <>
-                <label className="block text-sm font-medium mt-4 mb-1">
-                  Charakter činnosti
-                </label>
+                <label className="block text-sm font-medium mt-4 mb-1">Charakter činnosti</label>
                 <select
                   className="w-full border rounded p-2"
                   value={character}
-                  onChange={(e) =>
-                    setCharacter(e.target.value)
-                  }
+                  onChange={(e) => setCharacter(e.target.value)}
                 >
                   <option value="">Vyberte</option>
-                  <option value="rozvoj">
-                    Rozvoj dovednosti
-                  </option>
-                  <option value="upevneni">
-                    Upevnění / nácvik
-                  </option>
-                  <option value="aplikace">
-                    Aplikace ve hře
-                  </option>
-                  <option value="soutez">
-                    Hra / soutěžní forma
-                  </option>
+                  {CHARACTERS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
               </>
             )}
@@ -781,28 +634,18 @@ export default function App() {
             {character && (
               <>
                 <div className="flex items-center justify-between mt-4">
-                  <label className="block text-sm font-medium">
-                    Kdo vedl
-                  </label>
+                  <label className="block text-sm font-medium">Kdo vedl</label>
                   {isLeaderLockedToTeacher && (
-                    <span className="text-xs text-gray-500">
-                      Bez tandemu – vede učitel(ka)
-                    </span>
+                    <span className="text-xs text-gray-500">Bez tandemu – vede učitel(ka)</span>
                   )}
                 </div>
                 <select
                   className="w-full border rounded p-2 disabled:bg-gray-100 disabled:text-gray-500"
                   value={leader}
-                  onChange={(e) =>
-                    setLeader(e.target.value as any)
-                  }
+                  onChange={(e) => setLeader(e.target.value as any)}
                   disabled={isLeaderLockedToTeacher}
                 >
-                  <option value="">
-                    {isLeaderLockedToTeacher
-                      ? "Učitel (pevně)"
-                      : "Vyberte"}
-                  </option>
+                  <option value="">{isLeaderLockedToTeacher ? "Učitel (pevně)" : "Vyberte"}</option>
                   <option value="ucitel">Učitel</option>
                   {!isLeaderLockedToTeacher && (
                     <>
@@ -815,7 +658,7 @@ export default function App() {
               </>
             )}
 
-            {/* SUBMIT BUTTON */}
+            {/* ODESLÁNÍ */}
             <button
               className="mt-4 w-full md:w-auto px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300"
               disabled={!canSubmit}
@@ -828,51 +671,42 @@ export default function App() {
                   place,
                   placeOther,
                   warmup,
-                  area,
-                  discipline,
+                  // >>> TADY JE OPRAVA <<<
+                  area: area === "other" ? areaOther : area,
+                  discipline:
+                    area === "other" || discipline === "other"
+                      ? discOther
+                      : discipline,
                   disciplineOther: discOther,
-                  focus,
+                  focus:
+                    area === "other" || discipline === "other" || focus === "other"
+                      ? focusOther
+                      : focus,
                   focusOther,
                   character,
                   leader,
                 };
 
                 try {
-                  // Pošleme jako x-www-form-urlencoded: data=<JSON>
-                  const body =
-                    "data=" +
-                    encodeURIComponent(
-                      JSON.stringify(payload)
-                    );
-
+                  const body = "data=" + encodeURIComponent(JSON.stringify(payload));
                   await fetch(APPS_SCRIPT_URL, {
                     method: "POST",
                     mode: "no-cors",
                     headers: {
-                      "Content-Type":
-                        "application/x-www-form-urlencoded;charset=UTF-8",
+                      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
                     },
                     body,
                   });
-
-                  alert(
-                    "✅ Záznam byl odeslán do Google Sheets!"
-                  );
+                  alert("✅ Záznam byl odeslán do Google Sheets!");
                 } catch (error) {
-                  console.error(
-                    "Chyba při odesílání:",
-                    error
-                  );
-                  alert(
-                    "❌ Nepodařilo se odeslat data. Zkontrolujte připojení nebo Google Script."
-                  );
+                  console.error("Chyba při odesílání:", error);
+                  alert("❌ Nepodařilo se odeslat data. Zkontrolujte připojení nebo Google Script.");
                 }
               }}
             >
               Odeslat záznam do Google Sheets
             </button>
 
-            {/* Test odkazy */}
             <div className="mt-3 flex gap-2 text-xs">
               <a
                 className="underline text-blue-600"
@@ -894,92 +728,27 @@ export default function App() {
           </div>
         </section>
 
-        {/* ========== Pravý sloupec – NÁHLED ========== */}
+        {/* NÁHLED */}
         <aside className="bg-white rounded-lg shadow border p-4">
           <h2 className="text-lg font-semibold mb-3">Náhled záznamu</h2>
           <div className="space-y-2 text-sm">
-            <p>
-              <span className="font-medium">Datum:</span>{" "}
-              {new Date(date).toLocaleString("cs-CZ")}
-            </p>
-            <p>
-              <span className="font-medium">Typ školy:</span>{" "}
-              {schoolType
-                ? SCHOOL_TYPE_LABEL[schoolType]
-                : "—"}
-            </p>
-            <p>
-              <span className="font-medium">Škola:</span>{" "}
-              {schoolId
-                ? `${schoolId} — ${schoolLabel(
-                    schoolId
-                  )}`
-                : "—"}
-            </p>
-            <p>
-              <span className="font-medium">Učitel:</span>{" "}
-              {teacher || "—"}
-            </p>
-            <p>
-              <span className="font-medium">Třída:</span>{" "}
-              {classId || "—"}
-            </p>
+            <p><span className="font-medium">Datum:</span> {new Date(date).toLocaleString("cs-CZ")}</p>
+            <p><span className="font-medium">Typ školy:</span> {schoolType ? SCHOOL_TYPE_LABEL[schoolType] : "—"}</p>
+            <p><span className="font-medium">Škola:</span> {schoolId ? `${schoolId} — ${schoolLabel(schoolId)}` : "—"}</p>
+            <p><span className="font-medium">Učitel:</span> {teacher || "—"}</p>
+            <p><span className="font-medium">Třída:</span> {classId || "—"}</p>
             <p>
               <span className="font-medium">Místo:</span>{" "}
-              {place
-                ? place === "jiné"
-                  ? `Jiné — ${
-                      placeOther || "bez popisu"
-                    }`
-                  : place
-                : "—"}
+              {place ? (place === "jiné" ? `Jiné — ${placeOther || "bez popisu"}` : place) : "—"}
             </p>
             <hr className="my-2" />
-            <p>
-              <span className="font-medium">Zahřátí:</span>{" "}
-              {warmup || "—"}
-            </p>
+            <p><span className="font-medium">Zahřátí:</span> {warmup || "—"}</p>
             <hr className="my-2" />
-            <p>
-              <span className="font-medium">Oblast:</span>{" "}
-              {areaLabel(area, areaOther) || "—"}
-            </p>
-            <p>
-              <span className="font-medium">
-                Disciplína / hra:
-              </span>{" "}
-              {disciplineLabel(
-                area,
-                discipline,
-                discOther
-              ) || "—"}
-            </p>
-            <p>
-              <span className="font-medium">
-                Zaměření:
-              </span>{" "}
-              {focusPretty(
-                area,
-                discipline,
-                focus,
-                focusOther
-              ) || "—"}
-            </p>
-            <p>
-              <span className="font-medium">
-                Charakter:
-              </span>{" "}
-              {character
-                ? CHARACTER_LABEL[character]
-                : "—"}
-            </p>
-            <p>
-              <span className="font-medium">Vedl:</span>{" "}
-              {leader ||
-                (isLeaderLockedToTeacher
-                  ? "ucitel"
-                  : "—")}
-            </p>
+            <p><span className="font-medium">Oblast:</span> {areaLabel(area, areaOther) || "—"}</p>
+            <p><span className="font-medium">Disciplína / hra:</span> {disciplineLabel(area, discipline, discOther) || "—"}</p>
+            <p><span className="font-medium">Zaměření:</span> {focusPretty(area, discipline, focus, focusOther) || "—"}</p>
+            <p><span className="font-medium">Charakter:</span> {character ? CHARACTER_LABEL[character] : "—"}</p>
+            <p><span className="font-medium">Vedl:</span> {leader || (isLeaderLockedToTeacher ? "ucitel" : "—")}</p>
           </div>
         </aside>
       </main>
